@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 """Module that does different things with a Redis client connection."""
 
 import redis
@@ -17,7 +17,7 @@ class Cache:
 
     def store(self, data: Union[str, ByteString, int, float]) -> str:
         """Generates a random key and persists the <data> into Redis.
-        
+
         Arg:
             data: the value to store in Redis.
 
