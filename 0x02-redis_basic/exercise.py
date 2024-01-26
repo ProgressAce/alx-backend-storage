@@ -3,20 +3,20 @@
 
 import redis
 import uuid
-from typing import Any, Callable, Optional, Union
+from functools import wraps
+from typing import Any, Callable, List, Optional, Union
 
 
-def count_calls(self, method: Callable[[None], None]) -> Callable[[None], None]:
+def count_calls(method: Callable) -> Callable:
     """Counts the number of times a method was called."""
     key = method.__qualname__
-    self._redis.set(key, 0)  # key for counting a method's call count
 
-    @functools.wraps(method)
-    def wrapper(*args):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
         """Performs the count incrementally."""
         self._redis.incr(key)
 
-        return method(args)
+        return method(self, *args, **kwargs)
 
     return wrapper
 
@@ -45,7 +45,7 @@ class Cache:
         return key
 
     def get(self, key: str,
-            fn: Optional[Callable[[ByteString], Any]]=None) -> Any:
+            fn: Optional[Callable[[bytes], Any]]=None) -> Any:
         """Gets the value of a key in its desired Python format.
 
         Args:
