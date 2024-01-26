@@ -4,12 +4,12 @@
 import redis
 import uuid
 from functools import wraps
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 
 def count_calls(method: Callable) -> Callable:
     """Counts the number of times a method was called."""
-    key = method.__qualname__
+    key: str = method.__qualname__
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
@@ -19,6 +19,31 @@ def count_calls(method: Callable) -> Callable:
         return method(self, *args, **kwargs)
 
     return wrapper
+
+
+def call_history(method: Callable) -> Callable:
+    """Records the input and output history of a method using Redis."""
+    in_key: str = method.__qualname__ + ":inputs"
+    out_key: str = method.__qualname__ + ":outputs"
+
+    @wraps(method)
+    def record_history(self, *args):  # kwargs are ignored for this exercise
+        """Adds the input args and output results of a method to lists.
+
+        They are either added to the list for inputs or for outputs.
+        These lists are stored in the local redis client server."""
+
+        for arg in args:
+            if type(arg) in [str, bytes, int]:
+                self._redis.rpush(in_key, arg)
+
+        method_output = method(self, *args)
+        self._redis.rpush(out_key, method_output)
+
+        return method_output
+
+    return record_history
+
 
 class Cache:
     """Represents cache system using Redis."""
@@ -30,6 +55,7 @@ class Cache:
         self._redis.flushdb()
 
     @count_calls
+    @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """Generates a random key and persists the <data> into Redis.
 
@@ -45,7 +71,7 @@ class Cache:
         return key
 
     def get(self, key: str,
-            fn: Optional[Callable[[bytes], Any]]=None) -> Any:
+            fn: Optional[Callable[[bytes], Any]] = None) -> Any:
         """Gets the value of a key in its desired Python format.
 
         Args:
