@@ -50,7 +50,7 @@ def replay(func: Callable) -> None:
 
     Arg:
         func: the function whose history to check.
-    
+
     An output is generated for tho show the call history."""
 
     r = redis.Redis()
