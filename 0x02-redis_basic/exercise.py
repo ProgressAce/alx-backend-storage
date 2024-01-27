@@ -45,6 +45,29 @@ def call_history(method: Callable) -> Callable:
     return record_history
 
 
+def replay(func: Callable) -> None:
+    """Displays the history of calls of a particular function.
+
+    Arg:
+        func: the function whose history to check.
+    
+    An output is generated for tho show the call history."""
+
+    r = redis.Redis()
+    func_name: str = func.__qualname__
+
+    inputs_val = r.lrange(f"{func_name}:inputs", 0, -1)
+    outputs_key = r.lrange(f"{func_name}:outputs", 0, -1)
+    key_value_zipper = zip(outputs_key, inputs_val)
+    # instead of using zip(), r.get(outputs[i]) can be used to get input values
+
+    count: int = len(outputs_key)
+    print(f"{func_name} was called {count} times:")
+
+    for key, value in key_value_zipper:
+        print(f"{func_name}(*('{value.decode('utf-8')}',)) -> {key}")
+
+
 class Cache:
     """Represents cache system using Redis."""
 

@@ -5,6 +5,7 @@ Main file
 import redis
 
 Cache = __import__('exercise').Cache
+replay = __import__('exercise').replay
 
 
 print("\n----Exercise 1----\n")
@@ -74,3 +75,8 @@ outputs = cache._redis.lrange("{}:outputs".format(cache.store.__qualname__), 0, 
 
 print("inputs: {}".format(inputs))
 print("outputs: {}".format(outputs))
+
+
+print("\n----Exercise 5----\n")
+replay(cache.store)
+
